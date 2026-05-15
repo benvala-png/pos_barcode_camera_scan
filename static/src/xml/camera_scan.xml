@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="CameraScanButton" owl="1">
+        <div class="control-button pos-camera-scan-btn" t-on-click="onClick">
+            <i class="fa fa-camera" role="img" aria-label="Scan caméra" title="Scan caméra"/>
+            <span>Scan</span>
+        </div>
+    </t>
+
+    <!-- Popup plein écran — montée au niveau Chrome via showPopup() -->
+    <t t-name="CameraScanPopup" owl="1">
+        <div class="pos-camera-overlay" t-on-click="onOverlayClick">
+            <div class="pos-camera-modal" t-on-click="onModalClick">
+
+                <div class="pos-camera-header">
+                    <span class="pos-camera-title">
+                        <i class="fa fa-camera"/> Scanner un code-barres
+                    </span>
+                    <button class="pos-camera-close" t-on-click="onClose">✕</button>
+                </div>
+
+                <t t-if="state.error">
+                    <div class="pos-camera-error">
+                        <i class="fa fa-exclamation-triangle"/>
+                        <p t-esc="state.error"/>
+                        <button t-on-click="toggleManualMode">Saisie manuelle</button>
+                    </div>
+                </t>
+
+                <t t-else="">
+                    <div class="pos-camera-viewport">
+                        <video t-ref="cameraVideo" autoplay="true" playsinline="true" muted="true"/>
+                        <div class="pos-camera-scan-frame">
+                            <div class="pos-camera-corner tl"/>
+                            <div class="pos-camera-corner tr"/>
+                            <div class="pos-camera-corner bl"/>
+                            <div class="pos-camera-corner br"/>
+                        </div>
+                        <p class="pos-camera-hint">Pointez vers le code-barres</p>
+                    </div>
+                </t>
+
+                <div class="pos-camera-controls">
+                    <t t-if="state.flashSupported">
+                        <button class="pos-camera-btn" t-on-click="toggleFlash">
+                            <i t-att-class="state.flashOn ? 'fa fa-bolt text-warning' : 'fa fa-bolt'"/>
+                            <t t-if="state.flashOn">Flash ON</t>
+                            <t t-else="">Flash OFF</t>
+                        </button>
+                    </t>
+                    <button class="pos-camera-btn" t-on-click="toggleManualMode">
+                        <i class="fa fa-keyboard-o"/>
+                        <t t-if="state.manualMode">Retour caméra</t>
+                        <t t-else="">Saisie manuelle</t>
+                    </button>
+                </div>
+
+                <t t-if="state.manualMode">
+                    <div class="pos-camera-manual">
+                        <input
+                            type="text"
+                            class="pos-camera-manual-input"
+                            placeholder="Code-barres..."
+                            t-att-value="state.manualInput"
+                            t-on-input="onManualInput"
+                            t-on-keydown="onManualKeydown"
+                            autofocus="true"
+                        />
+                        <button class="pos-camera-manual-submit" t-on-click="onManualSubmit">
+                            <i class="fa fa-check"/> Valider
+                        </button>
+                    </div>
+                </t>
+
+            </div>
+        </div>
+    </t>
+
+</templates>
