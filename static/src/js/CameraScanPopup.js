@@ -3,7 +3,9 @@ odoo.define('pos_barcode_camera_scan.CameraScanPopup', function (require) {
 
     const AbstractAwaitablePopup = require('point_of_sale.AbstractAwaitablePopup');
     const Registries = require('point_of_sale.Registries');
-    const { onMounted, onWillUnmount, useState, useRef } = owl;
+    const { onMounted, onWillUnmount, useState } = owl;
+
+    const READER_DIV_ID = 'pos-camera-scan-reader';
 
     class CameraScanPopup extends AbstractAwaitablePopup {
         setup() {
@@ -18,10 +20,9 @@ odoo.define('pos_barcode_camera_scan.CameraScanPopup', function (require) {
                 error: null,
             });
 
-            this.videoRef   = useRef('cameraVideo');
-            this.codeReader = null;
-            this.videoTrack = null;
-            this._scanned   = false;
+            this.html5QrCode = null;
+            this.videoTrack  = null;
+            this._scanned    = false;
 
             onMounted(() => this._startCamera());
             onWillUnmount(() => this._stopCamera());
@@ -37,43 +38,30 @@ odoo.define('pos_barcode_camera_scan.CameraScanPopup', function (require) {
         }
 
         async _startCamera() {
-            const videoEl = this.videoRef.el;
-            if (!videoEl) return;
-
             try {
-                const hints = new Map();
-                hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-                    ZXing.BarcodeFormat.EAN_13,
-                    ZXing.BarcodeFormat.EAN_8,
-                    ZXing.BarcodeFormat.UPC_A,
-                    ZXing.BarcodeFormat.UPC_E,
-                    ZXing.BarcodeFormat.CODE_128,
-                    ZXing.BarcodeFormat.CODE_39,
-                    ZXing.BarcodeFormat.QR_CODE,
-                ]);
+                this.html5QrCode = new Html5Qrcode(READER_DIV_ID, { verbose: false });
 
-                this.codeReader = new ZXing.BrowserMultiFormatReader(hints);
-                await this.codeReader.decodeFromConstraints(
-                    { video: { facingMode: 'environment' } },
-                    videoEl,
-                    (result, _err) => {
-                        if (result && !this._scanned) {
-                            this._onScanSuccess(result.getText());
-                        }
-                    }
+                await this.html5QrCode.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, aspectRatio: 1.0 },
+                    (decodedText) => {
+                        if (!this._scanned) this._onScanSuccess(decodedText);
+                    },
+                    // per-frame errors are normal (no barcode in frame) — suppress
+                    () => {}
                 );
 
-                const stream = videoEl.srcObject;
-                if (stream) {
-                    const tracks = stream.getVideoTracks();
+                // Grab video track for torch control
+                const videoEl = document.getElementById(READER_DIV_ID)
+                    ?.querySelector('video');
+                if (videoEl && videoEl.srcObject) {
+                    const tracks = videoEl.srcObject.getVideoTracks();
                     if (tracks.length > 0) {
                         this.videoTrack = tracks[0];
                         const caps = this.videoTrack.getCapabilities
                             ? this.videoTrack.getCapabilities()
                             : {};
-                        if (caps.torch) {
-                            this.state.flashSupported = true;
-                        }
+                        if (caps.torch) this.state.flashSupported = true;
                     }
                 }
             } catch (e) {
@@ -82,15 +70,17 @@ odoo.define('pos_barcode_camera_scan.CameraScanPopup', function (require) {
             }
         }
 
-        _stopCamera() {
-            if (this.codeReader) {
-                try { this.codeReader.reset(); } catch (_) {}
-                this.codeReader = null;
-            }
-            const videoEl = this.videoRef.el;
-            if (videoEl && videoEl.srcObject) {
-                videoEl.srcObject.getTracks().forEach((t) => t.stop());
-                videoEl.srcObject = null;
+        async _stopCamera() {
+            if (this.html5QrCode) {
+                try {
+                    const state = this.html5QrCode.getState();
+                    // state 2 = SCANNING, state 3 = PAUSED
+                    if (state === 2 || state === 3) {
+                        await this.html5QrCode.stop();
+                    }
+                } catch (_) {}
+                try { this.html5QrCode.clear(); } catch (_) {}
+                this.html5QrCode = null;
             }
             this.videoTrack = null;
         }

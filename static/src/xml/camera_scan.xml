@@ -30,13 +30,7 @@
 
                 <t t-else="">
                     <div class="pos-camera-viewport">
-                        <video t-ref="cameraVideo" autoplay="true" playsinline="true" muted="true"/>
-                        <div class="pos-camera-scan-frame">
-                            <div class="pos-camera-corner tl"/>
-                            <div class="pos-camera-corner tr"/>
-                            <div class="pos-camera-corner bl"/>
-                            <div class="pos-camera-corner br"/>
-                        </div>
+                        <div id="pos-camera-scan-reader"/>
                         <p class="pos-camera-hint">Pointez vers le code-barres</p>
                     </div>
                 </t>
