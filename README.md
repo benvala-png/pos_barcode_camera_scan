@@ -32,7 +32,7 @@ Odoo 16 Community module adding camera-based barcode scanning to the Point of Sa
 
 ## Credits
 
-- [ZXing-js](https://github.com/zxing-js/library) — barcode decoding library (Apache 2.0)
+- [html5-qrcode](https://github.com/mebjas/html5-qrcode) — barcode/QR decoding library (Apache 2.0)
 - [Odoo](https://github.com/odoo/odoo) — base framework (LGPL-3)
 
 ## License
