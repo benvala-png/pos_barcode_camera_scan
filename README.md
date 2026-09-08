@@ -1,40 +1,82 @@
-# POS Barcode Camera Scan
+# pos_barcode_camera_scan (Odoo 16)
 
-Odoo 16 Community module adding camera-based barcode scanning to the Point of Sale interface — designed as a complement to physical scanners for mobile/tablet usage.
+Addon Odoo 16 Community qui ajoute le scan de code-barres **par la caméra**
+dans l'interface POS — pensé en complément d'un scanner physique, pour un
+usage mobile/tablette.
 
-## Prerequisites
+**HTTPS obligatoire** pour l'accès caméra (les navigateurs bloquent
+`getUserMedia` en HTTP simple). En HTTP, le module retombe sur la saisie
+manuelle seule.
 
-- Odoo 16 Community
-- **HTTPS required** for camera access (browsers block `getUserMedia` on plain HTTP). On HTTP, the module falls back to manual entry only.
+---
 
-## Features
+## Fonctionnalités
 
-- **Scan button** in the POS ProductScreen (camera icon)
-- **Full-screen popup** with live rear-camera stream
-- **Flash/torch** support when available on the device
-- **Manual entry fallback** when HTTP is used or camera access is denied
-- **Native Odoo barcode_reader integration** — triggers the same pipeline as a physical scanner
+| Fonctionnalité | Description |
+|---|---|
+| Bouton de scan | Icône caméra ajoutée aux boutons de contrôle de l'écran de vente (`ProductScreen`) |
+| Popup plein écran | Flux vidéo de la caméra arrière en direct |
+| Flash / torche | Activable quand l'appareil le permet |
+| Saisie manuelle | Repli si la caméra est refusée ou indisponible (HTTP, permission refusée) |
+| Intégration native | Le code lu déclenche `this.env.barcode_reader.scan(payload)` — le même pipeline qu'un scanner physique |
+
+---
 
 ## Installation
 
-1. Clone this repository into your Odoo `extra-addons` folder:
-   ```bash
-   git clone https://github.com/benvala-png/pos_barcode_camera_scan.git /path/to/extra-addons/pos_barcode_camera_scan
-   ```
-2. Restart Odoo and update the apps list (`Settings > Apps > Update Apps List`).
-3. Search for **"POS Barcode Camera Scan"** and install it.
-4. Open your Point of Sale configuration and verify the module is active.
+1. Copier le dossier `pos_barcode_camera_scan` dans un répertoire présent dans `addons_path` (dépend de `point_of_sale`, inclus dans Odoo)
+2. Redémarrer Odoo, aucune session POS ouverte
+3. **Apps > Mettre à jour la liste des applications**
+4. Rechercher `POS Barcode Camera Scan` et cliquer sur **Installer**
+5. Vérifier que le site est servi en **HTTPS** — sinon le bouton retombe sur la saisie manuelle
 
-## Known Limitations
+---
 
-- Decoding performance varies depending on lighting conditions and camera quality.
-- For high-volume cashier use, a physical Bluetooth or USB barcode scanner is recommended.
+## Logique
 
-## Credits
+Le décodage se fait avec la bibliothèque `html5-qrcode` (v2.x, incluse dans
+`static/src/lib/`). Le module a démarré avec ZXing-js puis migré vers
+html5-qrcode ; le fichier `zxing.min.js` historique a été retiré (mort,
+jamais chargé par le manifeste).
 
-- [html5-qrcode](https://github.com/mebjas/html5-qrcode) — barcode/QR decoding library (Apache 2.0)
-- [Odoo](https://github.com/odoo/odoo) — base framework (LGPL-3)
+Le bouton s'ajoute via `ProductScreen.addControlButton` avec
+`condition: () => true` — il est donc toujours visible, indépendamment du
+matériel réellement branché.
 
-## License
+---
 
-This module is released under the [GNU Lesser General Public License v3](LICENSE), consistent with the Odoo ecosystem.
+## Limites connues
+
+- La qualité du décodage dépend de la luminosité et de la caméra de l'appareil.
+- Pour un usage caissier à volume élevé, un scanner physique Bluetooth ou USB reste recommandé — ce module est un complément, pas un remplacement.
+
+---
+
+## Structure du module
+
+```
+pos_barcode_camera_scan/
+├── __init__.py
+├── __manifest__.py
+└── static/src/
+    ├── js/
+    │   ├── CameraScanButton.js   # Bouton de contrôle sur ProductScreen
+    │   └── CameraScanPopup.js    # Popup plein écran, flux caméra + torche
+    ├── lib/
+    │   └── html5-qrcode.min.js   # Bibliothèque de décodage (Apache 2.0)
+    ├── scss/
+    │   └── camera_scan.scss
+    └── xml/
+        └── camera_scan.xml       # Templates QWeb du bouton et de la popup
+```
+
+---
+
+## Crédits
+
+- [html5-qrcode](https://github.com/mebjas/html5-qrcode) — décodage code-barres/QR (Apache 2.0)
+- [Odoo](https://github.com/odoo/odoo) — framework de base (LGPL-3)
+
+## Licence
+
+LGPL-3, cohérent avec l'écosystème Odoo.
