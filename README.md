@@ -1,5 +1,9 @@
 # pos_barcode_camera_scan (Odoo 16)
 
+> **In English —** Scan barcodes with a phone or tablet camera directly in the Odoo 16 POS, as a complement to a hardware scanner. Scanned codes go through the same pipeline as a physical scanner; manual entry is the fallback when the camera is unavailable (HTTPS is required for camera access).
+
+*Documentation below is in French.*
+
 Addon Odoo 16 Community qui ajoute le scan de code-barres **par la caméra**
 dans l'interface POS — pensé en complément d'un scanner physique, pour un
 usage mobile/tablette.

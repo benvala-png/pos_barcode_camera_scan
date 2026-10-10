@@ -3,7 +3,7 @@
     'version': '16.0.2.0.0',
     'category': 'Point of Sale',
     'summary': 'Scanner les codes-barres avec la caméra du téléphone dans le POS',
-    'author': 'Benjamin',
+    'author': 'Benjamin Van Laethem',
     'license': 'LGPL-3',
     'depends': ['point_of_sale'],
     'assets': {
